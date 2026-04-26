@@ -1,0 +1,78 @@
+Project with Paper Submission: 
+1.Select a ML/DL application from existing repositories-for any use case-- Must adhereto SDGs
+
+2.Infuse LLM/GenAI/Agentic AI to the application
+
+3.Use any inference engine, aka model serving (VCC/Triton inference sensor/tensorRT/Grocs/Rest API/Flask)
+
+4.Containerize the application. (Shell Script)
+
+5.Make application public on both DockerHub and GitHub
+
+6.Follow git commands for version control
+
+7.Prepare manuscript as per the template (5–6 pages) -- Software impact -- (35 daysfor judgement of manuscript; must get approval before final review of project)
+
+
+
+SEAI Project Review Schedule (Individual Project—Groups not permitted) 
+
+Review 
+ Due 
+ Tasks to be completed for project 
+ 
+Review 1 
+ March 14, 2025 
+ S/W Application and Customization 
+ 
+Review 2 
+ March 28, 2025 
+ GitHub and Docker Hub, Inferencing, Deployment as containers 
+ 
+Review 3 
+ March 31, 2025 
+ Software Product Paper Draft 
+ 
+
+
+Submission to Journal Due: April 5, 2025 
+
+
+
+Assessment Pattern: 
+Assessment 
+ Points 
+ 
+CLA I 
+ 10 
+ 
+CLA II 
+ 10 
+ 
+Exp 1-7 
+ 5 
+ 
+Exp 8-15 
+ 5 
+ 
+Software Product Paper Acceptance 
+ 70 
+ 
+
+
+
+Evaluation: 
+Paper Submission & Sent for Review—WITHOUT Rejection from Editor—35/70 
+Paper accepted for publication: 70/70 
+
+Link for the Journal Website 
+https://www.sciencedirect.com/journal/software-impacts 
+
+Link for the template (word format) for preparation of the paper 
+https://legacyfileshare.elsevier.com/promis_misc/SIMPAC_OSP_Template.docx 
+
+Sample paper 
+https://www.sciencedirect.com/science/article/pii/S2665963824001192 
+
+https://www.sciencedirect.com/science/article/pii/S2665963824001192/pdfft?md5=6b181acfae96bc147786ef6f80aa0224&pid=1-s2.0-S2665963824001192-main.pdf 
+

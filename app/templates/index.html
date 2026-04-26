@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TruthLens — AI Fact Checker | SDG 16</title>
+<meta name="description" content="AI-powered fake news detector using BERT + LLaMA 3. Paste any news headline or article and get an instant fact-check report."/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;
+  --bg2:#12121a;
+  --bg3:#1a1a27;
+  --border:#2a2a3e;
+  --accent:#7c3aed;
+  --accent2:#4f46e5;
+  --accent3:#06b6d4;
+  --green:#10b981;
+  --red:#ef4444;
+  --orange:#f59e0b;
+  --text:#f1f5f9;
+  --text2:#94a3b8;
+  --text3:#64748b;
+  --card:#16162a;
+  --glow:rgba(124,58,237,0.3);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* Animated background */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 20% 20%,rgba(124,58,237,0.12) 0%,transparent 60%),
+             radial-gradient(ellipse at 80% 80%,rgba(6,182,212,0.08) 0%,transparent 60%);
+  pointer-events:none;z-index:0;
+}
+
+/* Floating orbs */
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;animation:float 8s ease-in-out infinite}
+.orb1{width:400px;height:400px;background:rgba(124,58,237,0.08);top:-100px;left:-100px;animation-delay:0s}
+.orb2{width:300px;height:300px;background:rgba(6,182,212,0.06);bottom:-50px;right:-50px;animation-delay:4s}
+@keyframes float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.05)}}
+
+.container{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:2rem 1.5rem}
+
+/* Header */
+header{text-align:center;padding:3rem 0 2rem}
+.logo{display:inline-flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem}
+.logo-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 0 30px var(--glow)}
+.logo-text{font-size:1.6rem;font-weight:800;background:linear-gradient(135deg,#a78bfa,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h1{font-size:clamp(2rem,5vw,3rem);font-weight:800;line-height:1.15;margin-bottom:1rem;background:linear-gradient(135deg,#f1f5f9 0%,#a78bfa 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{color:var(--text2);font-size:1.05rem;max-width:560px;margin:0 auto 1.5rem}
+.sdg-badge{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#34d399;padding:0.4rem 1rem;border-radius:999px;font-size:0.8rem;font-weight:600}
+
+/* Input Card */
+.input-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem;margin-bottom:1.5rem;box-shadow:0 4px 40px rgba(0,0,0,0.4)}
+.input-label{font-size:0.85rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem;display:block}
+textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;color:var(--text);font-family:'Inter',sans-serif;font-size:0.95rem;line-height:1.6;resize:vertical;min-height:140px;transition:border-color 0.2s,box-shadow 0.2s;outline:none}
+textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,0.2)}
+textarea::placeholder{color:var(--text3)}
+
+.char-count{text-align:right;font-size:0.75rem;color:var(--text3);margin-top:0.4rem}
+
+.btn-analyze{width:100%;margin-top:1.25rem;padding:1rem 2rem;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:0.02em;transition:all 0.2s;position:relative;overflow:hidden}
+.btn-analyze:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(124,58,237,0.4)}
+.btn-analyze:active{transform:translateY(0)}
+.btn-analyze:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+
+/* Examples */
+.examples{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:1rem}
+.examples-label{width:100%;font-size:0.75rem;color:var(--text3);font-weight:500}
+.example-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:0.35rem 0.8rem;border-radius:8px;font-size:0.75rem;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif}
+.example-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(124,58,237,0.08)}
+
+/* Loader */
+.loader{display:none;text-align:center;padding:3rem;background:var(--card);border:1px solid var(--border);border-radius:20px;margin-bottom:1.5rem}
+.loader.active{display:block}
+.spinner{width:56px;height:56px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1.25rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-text{color:var(--text2);font-size:0.95rem}
+.loader-steps{margin-top:0.75rem;display:flex;flex-direction:column;gap:0.3rem}
+.loader-step{font-size:0.82rem;color:var(--text3);display:flex;align-items:center;justify-content:center;gap:0.5rem}
+.loader-step.done{color:var(--green)}
+.loader-step span.dot{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+
+/* Results */
+.results{display:none}
+.results.active{display:block;animation:fadeUp 0.5s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* Verdict Banner */
+.verdict-banner{border-radius:20px;padding:1.75rem 2rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:1.5rem;position:relative;overflow:hidden}
+.verdict-banner::before{content:'';position:absolute;inset:0;opacity:0.08;border-radius:20px}
+.verdict-banner.fake{background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3)}
+.verdict-banner.fake::before{background:var(--red)}
+.verdict-banner.real{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3)}
+.verdict-banner.real::before{background:var(--green)}
+
+.verdict-icon{font-size:3rem;flex-shrink:0}
+.verdict-label{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;opacity:0.7;margin-bottom:0.25rem}
+.verdict-text{font-size:2rem;font-weight:800}
+.verdict-banner.fake .verdict-text{color:var(--red)}
+.verdict-banner.real .verdict-text{color:var(--green)}
+.verdict-summary{font-size:0.9rem;color:var(--text2);margin-top:0.4rem}
+
+/* Confidence */
+.confidence-wrap{text-align:right;flex-shrink:0}
+.confidence-num{font-size:2.5rem;font-weight:800}
+.verdict-banner.fake .confidence-num{color:var(--red)}
+.verdict-banner.real .confidence-num{color:var(--green)}
+.confidence-label{font-size:0.75rem;color:var(--text2)}
+
+/* Cards grid */
+.cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
+@media(max-width:600px){.cards-grid{grid-template-columns:1fr}}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem}
+.card-title{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem}
+.card-title span{font-size:1rem}
+
+/* Credibility Gauge */
+.gauge-wrap{text-align:center}
+.gauge-bar-bg{height:10px;background:var(--bg3);border-radius:999px;overflow:hidden;margin:0.75rem 0}
+.gauge-bar{height:100%;border-radius:999px;transition:width 1s cubic-bezier(0.4,0,0.2,1);background:linear-gradient(90deg,var(--red),var(--orange),var(--green))}
+.gauge-labels{display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text3)}
+.gauge-score{font-size:2.5rem;font-weight:800;color:var(--text);margin-top:0.5rem}
+.gauge-score-label{font-size:0.8rem;color:var(--text2)}
+
+/* Red flags */
+.flags-list{list-style:none;display:flex;flex-direction:column;gap:0.5rem}
+.flags-list li{display:flex;gap:0.6rem;font-size:0.875rem;color:var(--text2);align-items:flex-start;line-height:1.4}
+.flag-icon{flex-shrink:0;margin-top:1px}
+
+/* Analysis card (full width) */
+.analysis-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.25rem}
+.analysis-text{font-size:0.92rem;color:var(--text2);line-height:1.75}
+
+/* Reset btn */
+.btn-reset{width:100%;padding:0.85rem;background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:12px;font-family:'Inter',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn-reset:hover{border-color:var(--accent);color:var(--text)}
+
+/* Error */
+.error-box{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;color:#fca5a5;font-size:0.9rem;display:none}
+.error-box.active{display:block}
+
+/* Footer */
+footer{text-align:center;padding:2.5rem 0 1.5rem;color:var(--text3);font-size:0.8rem}
+footer a{color:var(--text3);text-decoration:none;hover:color:var(--accent)}
+footer a:hover{color:var(--accent)}
+.footer-tags{display:flex;justify-content:center;flex-wrap:wrap;gap:0.5rem;margin-top:0.75rem}
+.tag{background:var(--bg3);border:1px solid var(--border);padding:0.25rem 0.65rem;border-radius:6px;font-size:0.7rem;color:var(--text3)}
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🔍</div>
+      <span class="logo-text">TruthLens</span>
+    </div>
+    <h1>AI-Powered Fact Checker</h1>
+    <p class="subtitle">Paste any news headline or article. Our BERT model classifies it, then LLaMA 3 explains exactly why.</p>
+    <div class="sdg-badge">🌐 SDG 16 — Peace, Justice & Strong Institutions</div>
+  </header>
+
+  <!-- Input -->
+  <div class="input-card">
+    <label class="input-label" for="newsInput">📰 News Headline or Article</label>
+    <textarea id="newsInput" placeholder="Paste a news headline, article excerpt, or social media post here..." oninput="updateCount()"></textarea>
+    <div class="char-count"><span id="charCount">0</span> characters</div>
+
+    <div class="examples">
+      <span class="examples-label">Try an example:</span>
+      <button class="example-btn" onclick="loadExample(0)">🔴 Fake example</button>
+      <button class="example-btn" onclick="loadExample(1)">🟢 Real example</button>
+      <button class="example-btn" onclick="loadExample(2)">⚠️ Clickbait</button>
+    </div>
+
+    <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">
+      🔍 Analyze Article
+    </button>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- Loader -->
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <div class="loader-text">Analyzing your article...</div>
+    <div class="loader-steps">
+      <div class="loader-step" id="step1"><span class="dot"></span> Running BERT classification model</div>
+      <div class="loader-step" id="step2"><span class="dot"></span> Generating LLM fact-check explanation</div>
+      <div class="loader-step" id="step3"><span class="dot"></span> Compiling credibility report</div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+
+    <!-- Verdict Banner -->
+    <div class="verdict-banner" id="verdictBanner">
+      <div class="verdict-icon" id="verdictIcon"></div>
+      <div style="flex:1">
+        <div class="verdict-label">AI Verdict</div>
+        <div class="verdict-text" id="verdictText"></div>
+        <div class="verdict-summary" id="factSummary"></div>
+      </div>
+      <div class="confidence-wrap">
+        <div class="confidence-num" id="confidenceNum"></div>
+        <div class="confidence-label">confidence</div>
+      </div>
+    </div>
+
+    <!-- 2-col grid -->
+    <div class="cards-grid">
+
+      <!-- Credibility Score -->
+      <div class="card">
+        <div class="card-title"><span>📊</span> Credibility Score</div>
+        <div class="gauge-wrap">
+          <div class="gauge-score" id="credScore">—</div>
+          <div class="gauge-score-label">out of 100</div>
+          <div class="gauge-bar-bg">
+            <div class="gauge-bar" id="gaugeBar" style="width:0%"></div>
+          </div>
+          <div class="gauge-labels"><span>Fake</span><span>Neutral</span><span>Credible</span></div>
+        </div>
+      </div>
+
+      <!-- Red Flags -->
+      <div class="card">
+        <div class="card-title"><span>🚩</span> Key Indicators</div>
+        <ul class="flags-list" id="flagsList"></ul>
+      </div>
+    </div>
+
+    <!-- Analysis -->
+    <div class="analysis-card">
+      <div class="card-title"><span>🧠</span> Expert AI Analysis</div>
+      <div class="analysis-text" id="analysisText"></div>
+    </div>
+
+    <button class="btn-reset" onclick="reset()">↩ Analyze Another Article</button>
+  </div>
+
+  <footer>
+    <div>Built for SEAI Project — Individual Submission</div>
+    <div class="footer-tags">
+      <span class="tag">BERT NLP</span>
+      <span class="tag">LLaMA 3 via Groq</span>
+      <span class="tag">Flask REST API</span>
+      <span class="tag">Docker</span>
+      <span class="tag">SDG 16</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+const EXAMPLES = [
+  "Scientists discover miracle cure for all cancers using lemon juice and baking soda — Big Pharma is hiding this from you! Share before they delete it!",
+  "The World Health Organization released new guidelines on Monday recommending that adults engage in at least 150 minutes of moderate-intensity aerobic activity per week.",
+  "You won't BELIEVE what this celebrity did! Doctors are SHOCKED by this one weird trick that burns belly fat overnight!"
+];
+
+function updateCount(){
+  document.getElementById('charCount').textContent = document.getElementById('newsInput').value.length;
+}
+
+function loadExample(i){
+  document.getElementById('newsInput').value = EXAMPLES[i];
+  updateCount();
+}
+
+async function analyze(){
+  const text = document.getElementById('newsInput').value.trim();
+  if(text.length < 15){
+    showError('Please enter at least 15 characters.');
+    return;
+  }
+
+  // UI state
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('errorBox').classList.remove('active');
+  document.getElementById('results').classList.remove('active');
+  document.getElementById('loader').classList.add('active');
+
+  // Animate loader steps
+  const steps = ['step1','step2','step3'];
+  steps.forEach(s => document.getElementById(s).classList.remove('done'));
+  let stepIdx = 0;
+  const stepTimer = setInterval(()=>{
+    if(stepIdx < steps.length){
+      document.getElementById(steps[stepIdx]).classList.add('done');
+      stepIdx++;
+    }
+  }, 900);
+
+  try {
+    const res = await fetch('/predict', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text})
+    });
+
+    clearInterval(stepTimer);
+    steps.forEach(s => document.getElementById(s).classList.add('done'));
+
+    await new Promise(r => setTimeout(r, 400));
+    document.getElementById('loader').classList.remove('active');
+
+    if(!res.ok){
+      const err = await res.json();
+      showError(err.error || 'Server error. Please try again.');
+      return;
+    }
+
+    const data = await res.json();
+    renderResults(data);
+
+  } catch(e){
+    clearInterval(stepTimer);
+    document.getElementById('loader').classList.remove('active');
+    showError('Cannot connect to the server. Make sure Flask is running on port 5000.');
+  } finally {
+    document.getElementById('analyzeBtn').disabled = false;
+  }
+}
+
+function renderResults(data){
+  const isFake = data.verdict === 'FAKE';
+  const banner = document.getElementById('verdictBanner');
+
+  banner.className = 'verdict-banner ' + (isFake ? 'fake' : 'real');
+  document.getElementById('verdictIcon').textContent = isFake ? '🚨' : '✅';
+  document.getElementById('verdictText').textContent = isFake ? '⚠ FAKE NEWS' : '✔ REAL NEWS';
+  document.getElementById('confidenceNum').textContent = data.confidence.toFixed(1) + '%';
+  document.getElementById('factSummary').textContent = data.fact_check_summary;
+
+  // Credibility gauge
+  const score = data.credibility_score;
+  document.getElementById('credScore').textContent = score;
+  setTimeout(()=>{
+    document.getElementById('gaugeBar').style.width = score + '%';
+  }, 100);
+
+  // Red flags
+  const ul = document.getElementById('flagsList');
+  ul.innerHTML = '';
+  (data.red_flags || []).forEach(flag => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="flag-icon">${isFake ? '🔴' : '🟢'}</span> ${flag}`;
+    ul.appendChild(li);
+  });
+
+  // Analysis
+  document.getElementById('analysisText').textContent = data.explanation;
+
+  document.getElementById('results').classList.add('active');
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function showError(msg){
+  const box = document.getElementById('errorBox');
+  box.textContent = '⚠ ' + msg;
+  box.classList.add('active');
+  document.getElementById('loader').classList.remove('active');
+  document.getElementById('analyzeBtn').disabled = false;
+}
+
+function reset(){
+  document.getElementById('results').classList.remove('active');
+  document.getElementById('newsInput').value = '';
+  updateCount();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Allow Ctrl+Enter to submit
+document.addEventListener('keydown', e => {
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyze();
+});
+</script>
+</body>
+</html>
