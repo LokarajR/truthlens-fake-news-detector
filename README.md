@@ -34,7 +34,7 @@ JSON Response → Beautiful Web UI
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/truthlens-fake-news-detector
+git clone https://github.com/LokarajR/truthlens-fake-news-detector
 cd truthlens-fake-news-detector
 
 # Set your Groq API key
