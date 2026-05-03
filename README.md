@@ -58,8 +58,8 @@ python app.py
 ### Option 3: Pull from DockerHub
 
 ```bash
-docker pull YOUR_DOCKERHUB_USERNAME/truthlens-fake-news-detector:latest
-docker run -p 5000:5000 -e GROQ_API_KEY=your_key YOUR_DOCKERHUB_USERNAME/truthlens-fake-news-detector
+docker pull user1967/truthlens-fake-news-detector:latest
+docker run -p 5000:5000 -e GROQ_API_KEY=your_key user1967/truthlens-fake-news-detector
 ```
 
 ## 📡 API Reference
